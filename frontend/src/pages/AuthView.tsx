@@ -13,7 +13,7 @@ import type { User } from '@shared/types/api'
 import { COLLEGES } from '@/config/constants'
 
 interface AuthViewProps {
-  onAuthSuccess: (user: User, token: string) => void
+  onAuthSuccess: (user: User) => void
   onNavigate: NavigateFunction
 }
 
@@ -46,7 +46,7 @@ export default function AuthView({ onAuthSuccess, onNavigate }: AuthViewProps) {
       if (isLogin) {
         const res = await apiService.login({ email: email.trim(), password })
         if (res.success) {
-          onAuthSuccess(res.data.user as User, res.data.token)
+          onAuthSuccess(res.data.user as User)
         } else {
           toast.error(res.message || '登录失败')
         }
@@ -59,7 +59,7 @@ export default function AuthView({ onAuthSuccess, onNavigate }: AuthViewProps) {
           major: major.trim() || undefined,
         })
         if (res.success) {
-          onAuthSuccess(res.data.user as User, res.data.token)
+          onAuthSuccess(res.data.user as User)
         } else {
           toast.error(res.message || '注册失败')
         }

@@ -47,9 +47,16 @@ router.post('/register', async (req: Request, res: Response) => {
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' })
     const { password: _, ...userWithoutPassword } = user
 
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    })
+
     return res.json({
       success: true,
-      data: { token, user: { ...userWithoutPassword, uploadCount: 0, favoriteCount: 0 } },
+      data: { user: { ...userWithoutPassword, uploadCount: 0, favoriteCount: 0 } },
     })
   } catch (err) {
     console.error(err)
@@ -78,7 +85,14 @@ router.post('/login', async (req: Request, res: Response) => {
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' })
     const { password: _, ...userWithoutPassword } = user
 
-    return res.json({ success: true, data: { token, user: userWithoutPassword } })
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    })
+
+    return res.json({ success: true, data: { user: userWithoutPassword } })
   } catch (err) {
     console.error(err)
     return res.status(500).json({ success: false, message: '登录失败' })

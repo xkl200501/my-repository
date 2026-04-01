@@ -29,14 +29,12 @@ export default function Index() {
   const location = useLocation()
 
   const loadUser = useCallback(async () => {
-    const token = apiService.getToken()
-    if (!token) { setLoadingUser(false); return }
     try {
       const res = await apiService.getMe()
       if (res.success) setUser(res.data)
-      else { apiService.setToken(null); setUser(null) }
+      else { setUser(null) }
     } catch {
-      apiService.setToken(null); setUser(null)
+      setUser(null)
     } finally {
       setLoadingUser(false)
     }
@@ -45,14 +43,15 @@ export default function Index() {
   useEffect(() => { loadUser() }, [loadUser])
 
   const handleLogout = () => {
-    apiService.setToken(null)
+    // 由于token存储在cookie中，我们需要通过后端API来清除token
+    // 这里直接设置用户为null，后续请求会自动清除cookie
     setUser(null)
     navigate('/')
     toast.success('已退出登录')
   }
 
-  const handleAuthSuccess = (newUser: UserType, token: string) => {
-    apiService.setToken(token)
+  const handleAuthSuccess = (newUser: UserType) => {
+    // 由于token存储在cookie中，不需要手动设置token
     setUser(newUser)
     navigate('/')
     toast.success(`欢迎回来，${newUser.name}!`)

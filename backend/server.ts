@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import path from 'path'
 import dotenv from 'dotenv'
 
@@ -14,9 +15,10 @@ import { runMigrations } from './db/index'
 const app = express()
 const PORT = process.env.PORT || 3001
 
-app.use(cors())
+app.use(cors({ credentials: true, origin: true }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(cookieParser())
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
