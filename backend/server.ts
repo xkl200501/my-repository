@@ -11,11 +11,18 @@ import resourceRoutes from './routes/resources'
 import adminRoutes from './routes/admin'
 import uploadRoutes from './routes/upload'
 import { runMigrations } from './db/index'
+import { errorHandler, notFound } from './middleware/errorHandler'
 
 const app = express()
 const PORT = process.env.PORT || 3001
 
-app.use(cors({ credentials: true, origin: true }))
+const isProduction = process.env.NODE_ENV === 'production'
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+
+app.use(cors({
+  credentials: true,
+  origin: isProduction ? frontendUrl : true
+}))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
@@ -35,6 +42,10 @@ app.use(express.static(REACT_BUILD_FOLDER))
 app.get('*', (_req, res) => {
   res.sendFile(path.join(REACT_BUILD_FOLDER, 'index.html'))
 })
+
+// Error handling middleware
+app.use(notFound)
+app.use(errorHandler)
 
 // Start server
 async function start() {

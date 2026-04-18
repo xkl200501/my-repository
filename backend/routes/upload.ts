@@ -4,6 +4,7 @@ import path from 'path'
 import fs from 'fs'
 import crypto from 'crypto'
 import { authenticateJWT } from '../middleware/auth'
+import { validatePasswordStrength, simulateVirusScan } from '../utils'
 
 const router = Router()
 
@@ -60,9 +61,8 @@ const upload = multer({
   },
 })
 
-router.post('/', authenticateJWT, (req: Request, res: Response, _next: NextFunction) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  upload.single('file')(req as any, res as any, (err) => {
+router.post('/', authenticateJWT, async (req: Request, res: Response, _next: NextFunction) => {
+  upload.single('file')(req, res, async (err) => {
     if (err) {
       console.error('文件上传错误:', err)
       if (err.code === 'LIMIT_FILE_SIZE') {
@@ -73,6 +73,14 @@ router.post('/', authenticateJWT, (req: Request, res: Response, _next: NextFunct
     try {
       if (!req.file) {
         return res.status(400).json({ success: false, message: '请选择文件' })
+      }
+      
+      // 模拟病毒扫描
+      const hasVirus = await simulateVirusScan(req.file.path)
+      if (hasVirus) {
+        // 删除包含病毒的文件
+        fs.unlinkSync(req.file.path)
+        return res.status(400).json({ success: false, message: '文件包含病毒，上传失败' })
       }
       
       // 计算文件哈希值，用于文件完整性校验
@@ -92,7 +100,7 @@ router.post('/', authenticateJWT, (req: Request, res: Response, _next: NextFunct
           fileSize: req.file.size,
           fileType: req.file.mimetype,
           fileHash: fileHash,
-          uploadedBy: (req as any).user?.userId
+          uploadedBy: req.user?.userId
         })
         
         return res.json({
